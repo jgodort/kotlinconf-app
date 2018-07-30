@@ -21,8 +21,18 @@ import com.brandongogetap.stickyheaders.exposed.StickyHeaderHandler
 import com.jetbrains.kotlinconf.presentation.SessionListPresenter
 import com.jetbrains.kotlinconf.presentation.SessionListView
 import kotlinx.coroutines.experimental.android.UI
-import org.jetbrains.anko.*
+import org.jetbrains.anko.AnkoComponent
+import org.jetbrains.anko.AnkoContext
+import org.jetbrains.anko.backgroundColor
+import org.jetbrains.anko.backgroundResource
+import org.jetbrains.anko.dip
+import org.jetbrains.anko.find
+import org.jetbrains.anko.frameLayout
+import org.jetbrains.anko.leftPadding
+import org.jetbrains.anko.margin
+import org.jetbrains.anko.matchParent
 import org.jetbrains.anko.recyclerview.v7.recyclerView
+import org.jetbrains.anko.relativeLayout
 import org.jetbrains.anko.support.v4.onRefresh
 import org.jetbrains.anko.support.v4.swipeRefreshLayout
 import org.jetbrains.kotlinconf.*
@@ -47,9 +57,15 @@ abstract class SessionListFragment : Fragment(), AnkoComponent<Context>, Session
 
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
+        val viewModel = ViewModelProviders.of(this, AndroidViewModelFactory.getInstance(activity!!.application))
+                .get(SessionListViewModel::class.java)
+                .apply {
+                    setNavigationManager(activity as NavigationManager)
+                    setSearchQueryProvider(activity as SearchQueryProvider)
+                }
 
         swipeRefreshLayout.onRefresh(presenter::updateData)
-        sessionsAdapter = SessionsAdapter(context, presenter::showSessionDetails)
+        sessionsAdapter = SessionsAdapter(context!!, presenter::showSessionDetails)
         sessionsRecyclerView.layoutManager = StickyLayoutManager(context, sessionsAdapter).apply {
             elevateHeaders(2)
         }
@@ -58,7 +74,7 @@ abstract class SessionListFragment : Fragment(), AnkoComponent<Context>, Session
             override fun onScrollStateChanged(recyclerView: RecyclerView, newState: Int) {
                 super.onScrollStateChanged(recyclerView, newState)
                 if (newState == SCROLL_STATE_IDLE) {
-                    sessionsListState = recyclerView.layoutManager.onSaveInstanceState()
+                    sessionsListState = recyclerView.layoutManager!!.onSaveInstanceState()
                 }
             }
         })
@@ -68,7 +84,7 @@ abstract class SessionListFragment : Fragment(), AnkoComponent<Context>, Session
         }
 
         sessionsListState?.let {
-            sessionsRecyclerView.layoutManager.onRestoreInstanceState(it)
+            sessionsRecyclerView.layoutManager!!.onRestoreInstanceState(it)
         }
         presenter.onCreate()
     }
@@ -88,7 +104,7 @@ abstract class SessionListFragment : Fragment(), AnkoComponent<Context>, Session
             container: ViewGroup?,
             savedInstanceState: Bundle?
     ): View? {
-        return createView(AnkoContext.create(activity))
+        return createView(AnkoContext.create(activity!!))
     }
 
     override fun createView(ui: AnkoContext<Context>): View = with(ui) {
