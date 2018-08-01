@@ -4,8 +4,8 @@ import com.github.salomonbrys.kotson.*
 import org.jetbrains.kotlinconf.data.*
 import io.ktor.application.*
 import io.ktor.client.*
-import io.ktor.client.backend.apache.*
 import io.ktor.client.call.*
+import io.ktor.client.engine.apache.Apache
 import io.ktor.http.*
 import kotlinx.coroutines.experimental.*
 import java.net.*
@@ -50,9 +50,9 @@ fun Application.launchSyncJob() {
     launch(CommonPool) {
         while (true) {
             log.trace("Synchronizing to Sessionize…")
-            val client = HttpClient(ApacheBackend)
+            val client = HttpClient(Apache)
             val response = client.call(URL(url)) {}
-            val text = response.readText()
+            val text = response.receive<String>()
             var data = gson.fromJson<AllData>(text)
             data = data.copy(sessions = data.sessions?.plus(fakeVotingSession))
             log.trace("Finished loading data from Sessionize.")

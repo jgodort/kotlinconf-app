@@ -1,8 +1,6 @@
 package org.jetbrains.kotlinconf.ui
 
 import android.arch.lifecycle.LiveData
-import android.arch.lifecycle.ViewModelProviders
-import android.arch.lifecycle.ViewModelProviders.DefaultFactory
 import android.content.Context
 import android.graphics.Canvas
 import android.graphics.Color
@@ -20,50 +18,42 @@ import android.widget.TextView
 import com.brandongogetap.stickyheaders.StickyLayoutManager
 import com.brandongogetap.stickyheaders.exposed.StickyHeader
 import com.brandongogetap.stickyheaders.exposed.StickyHeaderHandler
-import org.jetbrains.kotlinconf.*
+import com.jetbrains.kotlinconf.presentation.SessionListPresenter
+import com.jetbrains.kotlinconf.presentation.SessionListView
 import kotlinx.coroutines.experimental.android.UI
-import kotlinx.coroutines.experimental.launch
 import org.jetbrains.anko.*
 import org.jetbrains.anko.recyclerview.v7.recyclerView
 import org.jetbrains.anko.support.v4.onRefresh
 import org.jetbrains.anko.support.v4.swipeRefreshLayout
+import org.jetbrains.kotlinconf.*
+import kotlin.properties.Delegates.observable
 
-abstract class SessionListFragment : Fragment(), AnkoComponent<Context> {
+abstract class SessionListFragment : Fragment(), AnkoComponent<Context>, SessionListView {
     private lateinit var sessionsRecyclerView: RecyclerView
     private lateinit var swipeRefreshLayout: SwipeRefreshLayout
-    private lateinit var sessionsAdapter: SessionsAdapter
+    protected lateinit var sessionsAdapter: SessionsAdapter
     private var sessionsListState: Parcelable? = null
 
-    abstract fun getSessions(model: SessionListViewModel): LiveData<List<SessionModel>>
     abstract val title: String
+
+    override var isUpdating: Boolean by observable(false) { _, _, isUpdating ->
+        swipeRefreshLayout.isRefreshing = isUpdating
+    }
+
+    private val repository by lazy { (activity.application as KotlinConfApplication).repository }
+    private val navigationManager by lazy { activity as NavigationManager }
+    private val searchQueryProvider by lazy { activity as SearchQueryProvider }
+    private val presenter by lazy { SessionListPresenter(UI, this, repository, navigationManager, searchQueryProvider) }
 
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
-        val viewModel = ViewModelProviders.of(this, DefaultFactory(activity.application))
-                .get(SessionListViewModel::class.java)
-                .apply {
-                    setNavigationManager(activity as NavigationManager)
-                    setSearchQueryProvider(activity as SearchQueryProvider)
-                }
 
-        swipeRefreshLayout.onRefresh {
-            launch(UI) { viewModel.updateData() }
-        }
-
-        sessionsAdapter = SessionsAdapter(context, viewModel::showSessionDetails)
+        swipeRefreshLayout.onRefresh(presenter::updateData)
+        sessionsAdapter = SessionsAdapter(context, presenter::showSessionDetails)
         sessionsRecyclerView.layoutManager = StickyLayoutManager(context, sessionsAdapter).apply {
             elevateHeaders(2)
         }
         sessionsRecyclerView.adapter = sessionsAdapter
-
-        getSessions(viewModel).observe(this) {
-            sessionsAdapter.sessions = it ?: emptyList()
-        }
-
-        viewModel.isUpdating.observe(this) {
-            swipeRefreshLayout.isRefreshing = it ?: false
-        }
-
         sessionsRecyclerView.addOnScrollListener(object : RecyclerView.OnScrollListener() {
             override fun onScrollStateChanged(recyclerView: RecyclerView, newState: Int) {
                 super.onScrollStateChanged(recyclerView, newState)
@@ -80,6 +70,12 @@ abstract class SessionListFragment : Fragment(), AnkoComponent<Context> {
         sessionsListState?.let {
             sessionsRecyclerView.layoutManager.onRestoreInstanceState(it)
         }
+        presenter.onCreate()
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        presenter.onDestroy()
     }
 
     override fun onSaveInstanceState(outState: Bundle) {
@@ -114,17 +110,14 @@ abstract class SessionListFragment : Fragment(), AnkoComponent<Context> {
         private var _data: List<*> = emptyList<Any>()
         override fun getAdapterData(): List<*> = _data
 
-        var sessions: List<SessionModel> = emptyList()
-            set(value) {
-                field = value
-                _data = field
-                        .sortedBy { it.room }
-                        .sortedBy { it.startsAt.getTime().toLong() }
-                        .groupBy { it.startsAt.toReadableDateString() }
-                        .flatMap { (day, sessions) -> listOf(HeaderItem(day)) + sessions }
+        var sessions: List<SessionModel> by observable(emptyList()) { _, _, sessions ->
+            _data = sessions
+                    .sortedWith(compareBy({ it.startsAt.getTime().toLong() }, SessionModel::room))
+                    .groupBy { it.startsAt.toReadableDateString() }
+                    .flatMap { (day, sessions) -> listOf(HeaderItem(day)) + sessions }
 
-                notifyDataSetChanged()
-            }
+            notifyDataSetChanged()
+        }
 
         override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
             when (holder) {
@@ -174,7 +167,7 @@ abstract class SessionListFragment : Fragment(), AnkoComponent<Context> {
 
     data class HeaderItem(val title: String) : StickyHeader
 
-    class HeaderViewHolder(view: View) :  RecyclerView.ViewHolder(view) {
+    class HeaderViewHolder(view: View) : RecyclerView.ViewHolder(view) {
         private val titleTextView = view.find<TextView>(R.id.session_list_header_title)
         fun setTitle(title: String) {
             titleTextView.text = title

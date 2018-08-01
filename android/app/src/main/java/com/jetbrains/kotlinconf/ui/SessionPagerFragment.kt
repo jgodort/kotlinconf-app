@@ -14,6 +14,7 @@ import android.support.v7.widget.Toolbar
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import com.jetbrains.kotlinconf.presentation.SessionListPresenter
 import org.jetbrains.kotlinconf.R
 import org.jetbrains.kotlinconf.SessionModel
 import org.jetbrains.anko.AnkoComponent
@@ -82,15 +83,15 @@ class SessionPagerFragment : Fragment(), AnkoComponent<Context> {
 
     class AllSessionsFragment : SessionListFragment() {
         override val title: String = "All"
-        override fun getSessions(model: SessionListViewModel): LiveData<List<SessionModel>> {
-            return model.sessions
+        override fun onUpdate(sessions: List<SessionModel>, favorites: List<SessionModel>) {
+            sessionsAdapter.sessions = sessions
         }
     }
 
     class FavoriteSessionsFragment : SessionListFragment() {
         override val title: String = "Favorites"
-        override fun getSessions(model: SessionListViewModel): LiveData<List<SessionModel>> {
-            return model.favorites
+        override fun onUpdate(sessions: List<SessionModel>, favorites: List<SessionModel>) {
+            sessionsAdapter.sessions = favorites
         }
     }
 }
