@@ -1,9 +1,11 @@
 rootProject.name = 'kotlinconf-app'
-// include 'web' TODO: Fixme
+
+enableFeaturePreview('GRADLE_METADATA')
+
 include 'backend'
 include 'common'
-include 'common-jvm'
-include 'common-js'
+include 'ios'
+// include 'web' TODO: Fixme
 
 if (INCLUDE_ANDROID == "true") {
     include 'android', 'android:app'
