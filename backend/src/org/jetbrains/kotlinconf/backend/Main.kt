@@ -7,6 +7,7 @@ import io.ktor.content.*
 import io.ktor.features.*
 import io.ktor.gson.*
 import io.ktor.http.*
+import io.ktor.http.content.*
 import io.ktor.request.*
 import io.ktor.response.*
 import io.ktor.routing.*
@@ -28,7 +29,7 @@ fun Application.main() {
     install(DefaultHeaders)
     install(ConditionalHeaders)
     install(Compression)
-    install(PartialContentSupport)
+    install(PartialContent)
     install(AutoHeadResponse)
     install(WebSockets)
     install(XForwardedHeadersSupport)

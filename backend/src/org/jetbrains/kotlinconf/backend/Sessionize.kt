@@ -5,7 +5,7 @@ import org.jetbrains.kotlinconf.data.*
 import io.ktor.application.*
 import io.ktor.client.*
 import io.ktor.client.call.*
-import io.ktor.client.engine.apache.Apache
+import io.ktor.client.engine.cio.*
 import io.ktor.http.*
 import kotlinx.coroutines.experimental.*
 import java.net.*
@@ -50,7 +50,7 @@ fun Application.launchSyncJob() {
     launch(CommonPool) {
         while (true) {
             log.trace("Synchronizing to Sessionize…")
-            val client = HttpClient(Apache)
+            val client = HttpClient(CIO)
             val response = client.call(URL(url)) {}
             val text = response.receive<String>()
             var data = gson.fromJson<AllData>(text)
