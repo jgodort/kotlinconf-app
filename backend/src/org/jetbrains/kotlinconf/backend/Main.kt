@@ -3,7 +3,6 @@ package org.jetbrains.kotlinconf.backend
 import com.google.gson.*
 import io.ktor.application.*
 import io.ktor.auth.*
-import io.ktor.content.*
 import io.ktor.features.*
 import io.ktor.gson.*
 import io.ktor.http.*

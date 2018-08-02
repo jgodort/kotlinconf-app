@@ -4,8 +4,8 @@ enableFeaturePreview('GRADLE_METADATA')
 
 include 'backend'
 include 'common'
-include 'ios'
-// include 'web' TODO: Fixme
+//include 'ios'
+//include 'web' TODO: Fixme
 
 if (INCLUDE_ANDROID == "true") {
     include 'android', 'android:app'

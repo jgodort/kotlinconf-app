@@ -1,17 +1,17 @@
 package org.jetbrains.kotlinconf.backend
 
-import org.jetbrains.kotlinconf.data.*
 import io.ktor.application.*
 import io.ktor.auth.*
 import io.ktor.features.*
 import io.ktor.http.*
+import io.ktor.http.cio.websocket.Frame
 import io.ktor.pipeline.*
 import io.ktor.request.*
 import io.ktor.response.*
 import io.ktor.routing.*
-import io.ktor.http.cio.websocket.Frame
-import io.ktor.websocket.webSocket
+import io.ktor.websocket.*
 import kotlinx.coroutines.experimental.channels.*
+import org.jetbrains.kotlinconf.data.*
 import java.time.*
 import java.time.format.*
 import java.util.*
@@ -47,7 +47,7 @@ private fun PipelineContext<Unit, ApplicationCall>.simulatedTime(production: Boo
 }
 
 /*
-POST http://localhost:8080/user
+POST http://localhost:8080/users
 1238476512873162837
  */
 fun Routing.apiRegister(database: Database, production: Boolean) {

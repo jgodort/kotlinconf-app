@@ -40,7 +40,6 @@ import org.jetbrains.kotlinconf.R
 import org.jetbrains.kotlinconf.model.*
 
 class SessionDetailsFragment : Fragment() {
-
     private lateinit var toolbar: Toolbar
     private lateinit var speakersTextView: TextView
     private lateinit var timeTextView: TextView
@@ -107,9 +106,7 @@ class SessionDetailsFragment : Fragment() {
             }
         }
 
-        viewModel.rating.value.let { rating ->
-            setupRatingButtons(rating)
-        }
+        setupRatingButtons(viewModel.rating.value)
 
         viewModel.rating.observe(this) { rating ->
             setupRatingButtons(rating)
