@@ -52,8 +52,16 @@ class SessionModel(
     }
 }
 
-fun AllData.allSessions(): List<SessionModel> =
-    sessions.map { it.id }.map { SessionModel.forSession(this, it) }
+fun AllData.allSessions(): List<SessionModel> {
+    return sessions.map { it.id }.map { SessionModel.forSession(this, it) }
+        .sortedWith(Comparator { first, second ->
+            return@Comparator if (first.startsAt != second.startsAt) {
+                first.startsAt.compareTo(second.startsAt)
+            } else {
+                first.description.compareTo(second.description)
+            }
+        })
+}
 
 fun AllData.favoriteSessions(): List<SessionModel> =
     favorites.map { it.sessionId }.map { SessionModel.forSession(this, it) }

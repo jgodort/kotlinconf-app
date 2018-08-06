@@ -8,7 +8,8 @@ import io.ktor.http.*
 import org.jetbrains.kotlinconf.data.*
 import org.jetbrains.kotlinconf.utils.*
 
-private const val END_POINT = "10.0.2.2"
+internal expect val END_POINT: String
+
 private const val PORT = 8080
 
 class KotlinConfApi(private val userId: String) {
@@ -54,6 +55,9 @@ class KotlinConfApi(private val userId: String) {
     }
 
     suspend fun deleteVote(vote: Vote): Unit = client.request {
+        method = HttpMethod.Delete
+        url("votes")
+        body = vote
     }
 
     private fun HttpRequestBuilder.url(path: String) {

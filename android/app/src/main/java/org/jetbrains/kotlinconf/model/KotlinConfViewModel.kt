@@ -3,7 +3,6 @@ package org.jetbrains.kotlinconf.model
 import android.arch.lifecycle.*
 import android.content.*
 import android.content.Context.*
-import android.provider.Settings.System.*
 import android.widget.*
 import com.google.gson.*
 import io.ktor.client.call.*
@@ -18,13 +17,8 @@ class KotlinConfViewModel(
     userId: String,
     private val onError: (Error) -> Toast
 ) : AnkoLogger {
-    private val gson: Gson by lazy { GsonBuilder().setDateFormat(DATE_FORMAT).create() }
-
+    private val gson: Gson by lazy { GsonBuilder().create() } //().setDateFormat(DATE_FORMAT).create() }
     private val data = KonfAppDataModel(userId)
-
-    init {
-        loadLocalData()
-    }
 
     private val favoritePreferences: SharedPreferences by lazy {
         context.getSharedPreferences(FAVORITES_PREFERENCES_NAME, MODE_PRIVATE)
@@ -50,6 +44,13 @@ class KotlinConfViewModel(
         }
     }
     val favorites: LiveData<List<SessionModel>> = _favorites
+
+    init {
+        loadLocalData()
+        launch {
+            update()
+        }
+    }
 
     suspend fun setFavorite(sessionId: String, isFavorite: Boolean) {
         setLocalFavorite(sessionId, isFavorite)
@@ -95,6 +96,8 @@ class KotlinConfViewModel(
 
         try {
             data.update()
+
+            _sessions.value = data.sessions
 
             syncLocalFavorites()
             syncLocalRatings()
